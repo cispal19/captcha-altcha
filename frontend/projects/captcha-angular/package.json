@@ -1,0 +1,39 @@
+{
+  "name": "@cispal19/captcha-angular",
+  "version": "1.1.0",
+  "description": "Librería Angular 21 anti-bot ALTCHA PoW v2: interceptor, casilla accesible y modo invisible",
+  "keywords": [
+    "angular",
+    "captcha",
+    "altcha",
+    "proof-of-work",
+    "anti-bot",
+    "accessibility"
+  ],
+  "license": "Apache-2.0",
+  "author": "Julio Cesar Cisneros Palomino (https://github.com/cispal19)",
+  "homepage": "https://github.com/cispal19/captcha-altcha/tree/main/frontend/projects/captcha-angular#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/cispal19/captcha-altcha.git",
+    "directory": "frontend/projects/captcha-angular"
+  },
+  "bugs": {
+    "url": "https://github.com/cispal19/captcha-altcha/issues"
+  },
+  "peerDependencies": {
+    "@angular/common": "^21.2.0",
+    "@angular/core": "^21.2.0",
+    "@angular/forms": "^21.2.0",
+    "rxjs": "^7.8.0"
+  },
+  "dependencies": {
+    "altcha-lib": "2.7.0",
+    "tslib": "^2.3.0"
+  },
+  "sideEffects": false,
+  "publishConfig": {
+    "access": "public",
+    "registry": "https://registry.npmjs.org/"
+  }
+}

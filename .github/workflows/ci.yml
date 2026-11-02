@@ -1,0 +1,155 @@
+# Quality gates y publicación.
+name: ci
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+    tags: ["starter-v*", "angular-v*"]
+
+permissions:
+  contents: read
+
+jobs:
+  secrets:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  backend:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+          cache: maven
+      - name: Build, tests, cobertura, formato y checkstyle
+        run: mvn -B -f backend/pom.xml verify
+      - name: SpotBugs/FindSecBugs + OWASP Dependency-Check
+        run: mvn -B -f backend/pom.xml -Psecurity -DskipTests verify
+        env:
+          NVD_API_KEY: ${{ secrets.NVD_API_KEY }}
+
+  sca:
+    # SCA independiente del NVD: Trivy sobre el JAR de la app de ejemplo,
+    # que incluye todas las dependencias de ejecución del starter.
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+          cache: maven
+      - run: mvn -B -f backend/pom.xml -pl captcha-sample-app -am clean package -DskipTests -Djacoco.skip=true
+      - uses: aquasecurity/trivy-action@0.30.0
+        with:
+          scan-type: rootfs
+          scan-ref: backend/captcha-sample-app/target/captcha-sample-app-1.0.0-SNAPSHOT.jar
+          scanners: vuln
+          severity: CRITICAL,HIGH
+          exit-code: "1"
+
+  frontend:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - run: npm ci
+      - run: npm run lint
+      - run: npm run test:ci
+      - run: npm run build:lib
+      - run: npm audit --audit-level=high --omit=dev
+
+  e2e:
+    runs-on: ubuntu-latest
+    needs: [backend, frontend]
+    services:
+      redis:
+        image: redis:7.4-alpine
+        ports: ["6379:6379"]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+          cache: maven
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - run: mvn -B -f backend/pom.xml -DskipTests install
+      - run: npm ci && npx playwright install --with-deps chromium
+        working-directory: frontend
+      - run: npm run e2e
+        working-directory: frontend
+        env:
+          ALTCHA_HMAC_KEY: ${{ secrets.E2E_ALTCHA_HMAC_KEY }}
+          SAMPLE_USER_PASSWORD: ${{ secrets.E2E_SAMPLE_USER_PASSWORD }}
+
+  publish-starter:
+    # Tag starter-vX.Y.Z → Maven Central (io.github.cispal19:captcha-spring-boot-starter:X.Y.Z).
+    if: startsWith(github.ref, 'refs/tags/starter-v')
+    needs: [secrets, backend, sca, frontend, e2e]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+          cache: maven
+          server-id: central
+          server-username: CENTRAL_USERNAME
+          server-password: CENTRAL_PASSWORD
+          gpg-private-key: ${{ secrets.GPG_PRIVATE_KEY }}
+          gpg-passphrase: MAVEN_GPG_PASSPHRASE
+      - name: Versión desde el tag
+        run: mvn -B -f backend/pom.xml versions:set -DnewVersion="${GITHUB_REF_NAME#starter-v}" -DgenerateBackupPoms=false
+      - run: mvn -B -f backend/pom.xml -Prelease -pl captcha-spring-boot-starter -am deploy -DskipTests -Djacoco.skip=true
+        env:
+          CENTRAL_USERNAME: ${{ secrets.CENTRAL_USERNAME }}
+          CENTRAL_PASSWORD: ${{ secrets.CENTRAL_PASSWORD }}
+          MAVEN_GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
+
+  publish-angular:
+    # Tag angular-vX.Y.Z → npmjs.com (@cispal19/captcha-angular@X.Y.Z), con provenance.
+    if: startsWith(github.ref, 'refs/tags/angular-v')
+    needs: [secrets, backend, sca, frontend, e2e]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          registry-url: "https://registry.npmjs.org"
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - name: Comprobar que el tag coincide con package.json
+        run: test "${GITHUB_REF_NAME#angular-v}" = "$(node -p "require('./projects/captcha-angular/package.json').version")"
+      - run: npm ci && npm run build:lib
+      - run: npm publish ./dist/captcha-angular --access public --provenance
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}

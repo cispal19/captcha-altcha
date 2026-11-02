@@ -1,0 +1,25 @@
+<h2>Ingreso</h2>
+<form [formGroup]="form" (ngSubmit)="submit()" novalidate>
+  <p>
+    <label for="username">Usuario</label><br />
+    <input id="username" formControlName="username" autocomplete="username" />
+  </p>
+  <p>
+    <label for="password">Contraseña</label><br />
+    <input
+      id="password"
+      type="password"
+      formControlName="password"
+      autocomplete="current-password"
+    />
+  </p>
+  @if (checkbox) {
+    <captcha-checkbox formControlName="captcha" />
+  } @else {
+    <captcha-notice />
+  }
+  <p>
+    <button type="submit" [disabled]="sending()">Ingresar</button>
+  </p>
+</form>
+<p class="message" role="status" aria-live="polite" data-testid="message">{{ message() }}</p>

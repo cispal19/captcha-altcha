@@ -1,0 +1,27 @@
+:host {
+  --captcha-color-primary: #0b5cad;
+  --captcha-color-text: #57606a;
+  --captcha-font-family: inherit;
+
+  display: block;
+  font-family: var(--captcha-font-family);
+}
+
+.captcha-notice {
+  margin: 0.5rem 0 0;
+  font-size: 0.8125rem;
+  color: var(--captcha-color-text);
+}
+
+.captcha-notice__link {
+  color: var(--captcha-color-primary);
+}
+
+.captcha-notice__link:focus-visible {
+  outline: 3px solid var(--captcha-color-primary);
+  outline-offset: 2px;
+}
+
+.captcha-notice__hint {
+  font-size: 0.75rem;
+}

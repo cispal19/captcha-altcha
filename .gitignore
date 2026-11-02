@@ -1,0 +1,34 @@
+# Java / Maven
+target/
+*.class
+*.jar
+!**/.mvn/wrapper/maven-wrapper.jar
+.gradle/
+build/
+
+# Node / Angular
+node_modules/
+dist/
+.angular/
+coverage/
+*.log
+npm-debug.log*
+test-results/
+playwright-report/
+
+# Secrets / env
+.env
+.env.*
+*.pem
+*.key
+secrets/
+
+# IDE / OS
+.idea/
+.vscode/
+*.iml
+.DS_Store
+Thumbs.db
+*.tmp
+*.swp
+perf/payloads.json

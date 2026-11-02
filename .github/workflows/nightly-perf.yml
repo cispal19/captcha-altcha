@@ -1,0 +1,43 @@
+# Prueba de carga nocturna: 500 verificaciones concurrentes, p95 < 1 s.
+name: nightly-perf
+
+on:
+  schedule:
+    - cron: "0 6 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  k6:
+    runs-on: ubuntu-latest
+    services:
+      redis:
+        image: redis:7.4-alpine
+        ports: ["6379:6379"]
+    env:
+      ALTCHA_HMAC_KEY: ${{ secrets.E2E_ALTCHA_HMAC_KEY }}
+      SAMPLE_USER_PASSWORD: ${{ secrets.E2E_SAMPLE_USER_PASSWORD }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+          cache: maven
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - run: mvn -B -f backend/pom.xml -DskipTests -Djacoco.skip=true install
+      - run: |
+          mvn -B -f backend/pom.xml -pl captcha-sample-app spring-boot:run \
+            -Dspring-boot.run.arguments="--server.forward-headers-strategy=framework --security.altcha.base-cost=1000 --server.tomcat.accept-count=1000" &
+          for i in $(seq 1 60); do curl -sf localhost:8080/api/auth/challenge >/dev/null && break; sleep 2; done
+      # Calentamiento de la JVM (la primera ráfaga en frío produce errores de conexión, no de verificación).
+      - run: npm ci && node scripts/presolve.mjs 50 && node scripts/presolve.mjs 500
+        working-directory: frontend
+      - uses: grafana/setup-k6-action@v1
+      - run: k6 run -e PAYLOADS=perf/payloads.json perf/verify-load.js

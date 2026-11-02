@@ -1,0 +1,186 @@
+{
+  "properties": [
+    {
+      "name": "security.altcha.enabled",
+      "type": "java.lang.Boolean",
+      "description": "Habilita la verificación anti-bot. En perfiles productivos solo puede desactivarse con allow-disable-in-production=true.",
+      "defaultValue": true
+    },
+    {
+      "name": "security.altcha.allow-disable-in-production",
+      "type": "java.lang.Boolean",
+      "description": "Autoriza explícitamente enabled=false con un perfil productivo activo (se registra un WARN).",
+      "defaultValue": false
+    },
+    {
+      "name": "security.altcha.production-profiles",
+      "type": "java.util.List<java.lang.String>",
+      "description": "Perfiles considerados productivos.",
+      "defaultValue": [
+        "prod"
+      ]
+    },
+    {
+      "name": "security.altcha.hmac-key",
+      "type": "java.lang.String",
+      "description": "Clave maestra HMAC (mínimo 32 bytes). Obligatoria. Inyéctela desde un Secret: ${ALTCHA_HMAC_KEY}."
+    },
+    {
+      "name": "security.altcha.challenge-path",
+      "type": "java.lang.String",
+      "description": "Ruta del endpoint que emite desafíos.",
+      "defaultValue": "/api/auth/challenge"
+    },
+    {
+      "name": "security.altcha.protected-paths",
+      "type": "java.util.List<java.lang.String>",
+      "description": "Peticiones protegidas, con formato \"MÉTODO /ruta\" (patrones de PathPatternParser).",
+      "defaultValue": [
+        "POST /api/auth/login"
+      ]
+    },
+    {
+      "name": "security.altcha.header-name",
+      "type": "java.lang.String",
+      "description": "Cabecera HTTP que lleva la solución.",
+      "defaultValue": "X-Altcha"
+    },
+    {
+      "name": "security.altcha.challenge-ttl",
+      "type": "java.time.Duration",
+      "description": "Vigencia del desafío (10s a 10m).",
+      "defaultValue": "120s"
+    },
+    {
+      "name": "security.altcha.algorithm",
+      "type": "io.github.cispal19.captcha.autoconfigure.CaptchaProperties$Algorithm",
+      "description": "Algoritmo de derivación de clave de la prueba de trabajo.",
+      "defaultValue": "pbkdf2-sha256"
+    },
+    {
+      "name": "security.altcha.base-cost",
+      "type": "java.lang.Integer",
+      "description": "Costo base (iteraciones PBKDF2), >= 1000.",
+      "defaultValue": 5000
+    },
+    {
+      "name": "security.altcha.max-cost",
+      "type": "java.lang.Integer",
+      "description": "Costo máximo del costo adaptativo, >= base-cost.",
+      "defaultValue": 80000
+    },
+    {
+      "name": "security.altcha.max-attempts",
+      "type": "java.lang.Integer",
+      "description": "Fallos por IP o usuario antes del bloqueo (1 a 100).",
+      "defaultValue": 5
+    },
+    {
+      "name": "security.altcha.attempt-window",
+      "type": "java.time.Duration",
+      "description": "Ventana de conteo de fallos (>= block-duration).",
+      "defaultValue": "15m"
+    },
+    {
+      "name": "security.altcha.block-duration",
+      "type": "java.time.Duration",
+      "description": "Duración del bloqueo temporal (1m a 24h).",
+      "defaultValue": "5m"
+    },
+    {
+      "name": "security.altcha.challenge-rate-limit",
+      "type": "java.lang.Integer",
+      "description": "Solicitudes de desafío por minuto e IP.",
+      "defaultValue": 30
+    },
+    {
+      "name": "security.altcha.store",
+      "type": "io.github.cispal19.captcha.autoconfigure.CaptchaProperties$Store",
+      "description": "Almacén de desafíos y contadores: redis (reutiliza spring.data.redis.*) o memory (solo fuera de producción).",
+      "defaultValue": "redis"
+    },
+    {
+      "name": "security.altcha.key-prefix",
+      "type": "java.lang.String",
+      "description": "Prefijo de claves en Redis; único por aplicación si se comparte el servidor.",
+      "defaultValue": "captcha:"
+    },
+    {
+      "name": "security.altcha.filter.enabled",
+      "type": "java.lang.Boolean",
+      "description": "Registra el filtro de verificación automática. Con false, invoque AntiBotService desde su servicio de autenticación.",
+      "defaultValue": true
+    },
+    {
+      "name": "security.altcha.filter.order",
+      "type": "java.lang.Integer",
+      "description": "Orden del filtro; debe ser menor que el de Spring Security (-100).",
+      "defaultValue": -110
+    },
+    {
+      "name": "security.altcha.login-attempts.auto-register",
+      "type": "java.lang.Boolean",
+      "description": "Registra automáticamente los fallos de login desde los eventos de Spring Security.",
+      "defaultValue": true
+    },
+    {
+      "name": "security.altcha.messages.required",
+      "type": "java.lang.String",
+      "description": "Texto de detail para CAPTCHA_REQUIRED.",
+      "defaultValue": "Se requiere la verificación anti-bot."
+    },
+    {
+      "name": "security.altcha.messages.invalid",
+      "type": "java.lang.String",
+      "description": "Texto de detail para CAPTCHA_INVALID.",
+      "defaultValue": "No se pudo verificar la solicitud. Inténtelo nuevamente."
+    },
+    {
+      "name": "security.altcha.messages.expired",
+      "type": "java.lang.String",
+      "description": "Texto de detail para CAPTCHA_EXPIRED.",
+      "defaultValue": "La verificación expiró. Inténtelo nuevamente."
+    },
+    {
+      "name": "security.altcha.messages.too-many-attempts",
+      "type": "java.lang.String",
+      "description": "Texto de detail para TOO_MANY_ATTEMPTS.",
+      "defaultValue": "Demasiados intentos. Intente nuevamente en unos minutos."
+    },
+    {
+      "name": "security.altcha.messages.unavailable",
+      "type": "java.lang.String",
+      "description": "Texto de detail para CAPTCHA_UNAVAILABLE.",
+      "defaultValue": "El servicio de verificación no está disponible. Inténtelo más tarde."
+    }
+  ],
+  "hints": [
+    {
+      "name": "security.altcha.algorithm",
+      "values": [
+        {
+          "value": "pbkdf2-sha256"
+        },
+        {
+          "value": "pbkdf2-sha512"
+        },
+        {
+          "value": "sha256"
+        }
+      ]
+    },
+    {
+      "name": "security.altcha.store",
+      "values": [
+        {
+          "value": "redis",
+          "description": "Redis compartido (producción)."
+        },
+        {
+          "value": "memory",
+          "description": "Solo desarrollo y un solo pod."
+        }
+      ]
+    }
+  ]
+}

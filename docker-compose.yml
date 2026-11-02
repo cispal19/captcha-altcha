@@ -1,0 +1,6 @@
+# Desarrollo local y E2E: Redis para los desafíos y contadores de la librería CAPTCHA.
+services:
+  redis:
+    image: redis:7.4-alpine
+    ports:
+      - "6379:6379"

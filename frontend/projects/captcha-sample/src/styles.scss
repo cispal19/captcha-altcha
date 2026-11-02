@@ -1,0 +1,18 @@
+/* Tema del proyecto consumidor aplicado a la librería mediante variables públicas. */
+:root {
+  font-family: system-ui, sans-serif;
+  color: #1f2328;
+}
+
+captcha-checkbox,
+captcha-notice {
+  --captcha-color-primary: #0b5cad;
+  --captcha-radius: 8px;
+  --captcha-font-family: system-ui, sans-serif;
+}
+
+input:not([type='checkbox']) {
+  padding: 0.4rem;
+  width: 100%;
+  box-sizing: border-box;
+}

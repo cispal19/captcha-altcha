@@ -1,0 +1,143 @@
+openapi: 3.1.0
+info:
+  title: Captcha Anti-Bot (ALTCHA PoW v2)
+  version: 1.0.0
+  description: |
+    Contrato HTTP de la librería CAPTCHA. La ruta del desafío y las rutas protegidas son
+    configurables (`security.altcha.challenge-path`, `security.altcha.protected-paths`);
+    aquí se documentan sus valores por defecto.
+
+    `POST /api/auth/login` pertenece al proyecto consumidor. La librería solo agrega el
+    requisito de cabecera `X-Altcha` y las respuestas de error 403, 429 y 503; el cuerpo y la
+    respuesta exitosa los define cada proyecto.
+paths:
+  /api/auth/challenge:
+    get:
+      operationId: getChallenge
+      summary: Emite un desafío PoW firmado, de un solo uso, con vigencia de 120 s
+      description: |
+        El endpoint se expone solo si `security.altcha.enabled=true`
+        (`@ConditionalOnProperty`). El costo puede aumentar según los fallos recientes de la IP.
+      responses:
+        "200":
+          description: Desafío emitido
+          headers:
+            Cache-Control:
+              schema: { type: string, const: "no-store" }
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Challenge" }
+        "429": { $ref: "#/components/responses/TooManyAttempts" }
+        "503": { $ref: "#/components/responses/Unavailable" }
+  /api/auth/login:
+    post:
+      operationId: login
+      summary: Login del proyecto consumidor protegido por la librería (ruta protegida por defecto)
+      parameters:
+        - $ref: "#/components/parameters/AltchaHeader"
+      requestBody:
+        required: true
+        description: Cuerpo propio del proyecto consumidor; la librería no lo lee ni lo modifica.
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: true
+              example: { username: "usuario", password: "********" }
+      responses:
+        "2XX":
+          description: Respuesta definida por el proyecto consumidor
+        "400":
+          description: Respuesta del proyecto consumidor (fuera del alcance de la librería)
+        "401":
+          description: Credenciales inválidas (proyecto consumidor). Cuenta como fallo por usuario e IP.
+        "403": { $ref: "#/components/responses/CaptchaRejected" }
+        "429": { $ref: "#/components/responses/TooManyAttempts" }
+        "503": { $ref: "#/components/responses/Unavailable" }
+components:
+  parameters:
+    AltchaHeader:
+      name: X-Altcha
+      in: header
+      required: true
+      description: |
+        Payload ALTCHA en base64 de `{ "challenge": Challenge, "solution": Solution }`.
+        Nombre configurable con `security.altcha.header-name`.
+      schema:
+        type: string
+        maxLength: 4096
+        pattern: "^[A-Za-z0-9+/]+={0,2}$"
+  schemas:
+    Challenge:
+      type: object
+      description: Desafío PoW v2 tal como lo produce `org.altcha.altcha.v2.Altcha.createChallenge`.
+      required: [parameters, signature]
+      properties:
+        parameters:
+          type: object
+          required: [algorithm, nonce, salt, cost, keyLength, keyPrefix, expiresAt]
+          properties:
+            algorithm: { type: string, example: "PBKDF2/SHA-256" }
+            nonce: { type: string }
+            salt: { type: string }
+            cost: { type: integer, minimum: 1 }
+            keyLength: { type: integer, minimum: 16 }
+            keyPrefix: { type: string, pattern: "^[0-9a-f]+$" }
+            expiresAt: { type: integer, description: "Epoch en segundos" }
+          additionalProperties: true
+        signature: { type: string, pattern: "^[0-9a-f]+$" }
+    Solution:
+      type: object
+      required: [counter, derivedKey]
+      properties:
+        counter: { type: integer, minimum: 0, maximum: 4294967295 }
+        derivedKey: { type: string, pattern: "^[0-9a-f]+$" }
+        time: { type: number, description: "Milisegundos de resolución (informativo)" }
+    AltchaPayload:
+      type: object
+      description: Estructura antes de codificarla en base64 para la cabecera `X-Altcha`.
+      required: [challenge, solution]
+      properties:
+        challenge: { $ref: "#/components/schemas/Challenge" }
+        solution: { $ref: "#/components/schemas/Solution" }
+    Problem:
+      type: object
+      description: RFC 9457. Nunca incluye trazas, rutas internas ni datos de la solución.
+      required: [type, title, status, code]
+      properties:
+        type: { type: string, format: uri, example: "urn:captcha:error:captcha-invalid" }
+        title: { type: string, example: "Verificación anti-bot fallida" }
+        status: { type: integer }
+        detail: { type: string, example: "No se pudo verificar la solicitud. Inténtelo nuevamente." }
+        code:
+          type: string
+          enum: [CAPTCHA_REQUIRED, CAPTCHA_INVALID, CAPTCHA_EXPIRED, TOO_MANY_ATTEMPTS, CAPTCHA_UNAVAILABLE]
+        challengeUrl:
+          type: string
+          description: |
+            Presente en las respuestas 403. Ruta del desafío tal como la expone el backend (incluye
+            server.servlet.context-path). El frontend la usa para resolver y reintentar.
+          example: "/api/auth/challenge"
+        headerName:
+          type: string
+          description: Presente en las respuestas 403. Nombre de la cabecera que debe llevar la solución.
+          example: "X-Altcha"
+  responses:
+    CaptchaRejected:
+      description: Falta la cabecera, o la solución es inválida, está expirada o ya se usó
+      content:
+        application/problem+json:
+          schema: { $ref: "#/components/schemas/Problem" }
+    TooManyAttempts:
+      description: Origen (IP o usuario) bloqueado temporalmente
+      headers:
+        Retry-After:
+          schema: { type: integer, description: "Segundos hasta el desbloqueo" }
+      content:
+        application/problem+json:
+          schema: { $ref: "#/components/schemas/Problem" }
+    Unavailable:
+      description: Almacén de desafíos no disponible (fail-closed)
+      content:
+        application/problem+json:
+          schema: { $ref: "#/components/schemas/Problem" }

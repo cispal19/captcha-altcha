@@ -1,0 +1,10 @@
+<h2>Consulta pública</h2>
+<form [formGroup]="form" (ngSubmit)="submit()">
+  <p>
+    <label for="dni">Número de documento</label><br />
+    <input id="dni" formControlName="dni" inputmode="numeric" />
+  </p>
+  <captcha-notice />
+  <p><button type="submit">Consultar</button></p>
+</form>
+<p class="message" role="status" aria-live="polite" data-testid="message">{{ message() }}</p>

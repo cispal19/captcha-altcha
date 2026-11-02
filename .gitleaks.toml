@@ -1,0 +1,8 @@
+title = "gitleaks config libreria_capcha"
+
+[extend]
+useDefault = true
+
+[allowlist]
+description = "Fixture de interoperabilidad ALTCHA con clave marcada test-only (no es un secreto real)"
+paths = ['''fixtures/altcha/''']

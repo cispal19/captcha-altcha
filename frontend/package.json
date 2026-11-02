@@ -1,0 +1,48 @@
+{
+  "name": "frontend",
+  "version": "0.0.0",
+  "scripts": {
+    "ng": "ng",
+    "start": "ng serve",
+    "build": "ng build",
+    "watch": "ng build --watch --configuration development",
+    "test": "ng test",
+    "lint": "ng lint && prettier --check \"projects/**/*.{ts,html,scss}\" \"e2e/**/*.ts\"",
+    "test:lib": "ng test captcha-angular --watch=false",
+    "test:ci": "ng test captcha-angular --watch=false --coverage",
+    "build:lib": "ng build captcha-angular",
+    "start:sample": "ng serve captcha-sample --proxy-config projects/captcha-sample/proxy.conf.mjs",
+    "e2e": "playwright test",
+    "solve-fixture": "node scripts/solve-fixture.mjs"
+  },
+  "private": true,
+  "packageManager": "npm@10.8.2",
+  "dependencies": {
+    "@angular/common": "^21.2.0",
+    "@angular/compiler": "^21.2.0",
+    "@angular/core": "^21.2.0",
+    "@angular/forms": "^21.2.0",
+    "@angular/platform-browser": "^21.2.0",
+    "@angular/router": "^21.2.0",
+    "altcha-lib": "2.7.0",
+    "rxjs": "~7.8.0",
+    "tslib": "^2.3.0"
+  },
+  "devDependencies": {
+    "@angular/build": "^21.2.27",
+    "@angular/cli": "^21.2.27",
+    "@angular/compiler-cli": "^21.2.0",
+    "@axe-core/playwright": "4.13.0",
+    "@playwright/test": "1.64.1",
+    "@vitest/coverage-v8": "4.1.12",
+    "angular-eslint": "21.4.0",
+    "axe-core": "4.14.0",
+    "eslint": "9.39.5",
+    "jsdom": "^28.0.0",
+    "ng-packagr": "^21.2.0",
+    "prettier": "^3.8.1",
+    "typescript": "~5.9.2",
+    "typescript-eslint": "8.72.0",
+    "vitest": "^4.0.8"
+  }
+}

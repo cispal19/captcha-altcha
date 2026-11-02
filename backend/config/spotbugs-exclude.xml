@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<FindBugsFilter>
+  <!-- Los records exponen colecciones inmutables y arrays copiados; EI_EXPOSE_REP en beans de Spring es ruido. -->
+  <Match>
+    <Bug pattern="EI_EXPOSE_REP,EI_EXPOSE_REP2"/>
+  </Match>
+  <!--
+    XSS_SERVLET en CaptchaProblems.write: la respuesta es application/problem+json serializada con
+    org.json (escapa todos los valores), con X-Content-Type-Options: nosniff, y su contenido son
+    mensajes y rutas de configuración, no datos del usuario. Revisado el 2026-10-21.
+  -->
+  <Match>
+    <Class name="io.github.cispal19.captcha.web.CaptchaProblems"/>
+    <Bug pattern="XSS_SERVLET"/>
+  </Match>
+</FindBugsFilter>

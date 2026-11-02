@@ -1,0 +1,43 @@
+/* To learn more about Typescript configuration file: https://www.typescriptlang.org/docs/handbook/tsconfig-json.html. */
+/* To learn more about Angular compiler options: https://angular.dev/reference/configs/angular-compiler-options. */
+{
+  "compileOnSave": false,
+  "compilerOptions": {
+    "paths": {
+      "@cispal19/captcha-angular": ["./projects/captcha-angular/src/public-api.ts"],
+      "@cispal19/captcha-angular/worker": ["./projects/captcha-angular/worker/src/public-api.ts"]
+    },
+    "strict": true,
+    "noImplicitOverride": true,
+    "noPropertyAccessFromIndexSignature": true,
+    "noImplicitReturns": true,
+    "noFallthroughCasesInSwitch": true,
+    "skipLibCheck": true,
+    "isolatedModules": true,
+    "experimentalDecorators": true,
+    "importHelpers": true,
+    "target": "ES2022",
+    "module": "preserve"
+  },
+  "angularCompilerOptions": {
+    "enableI18nLegacyMessageIdFormat": false,
+    "strictInjectionParameters": true,
+    "strictInputAccessModifiers": true,
+    "strictTemplates": true
+  },
+  "files": [],
+  "references": [
+    {
+      "path": "./projects/captcha-angular/tsconfig.lib.json"
+    },
+    {
+      "path": "./projects/captcha-angular/tsconfig.spec.json"
+    },
+    {
+      "path": "./projects/captcha-sample/tsconfig.app.json"
+    },
+    {
+      "path": "./projects/captcha-sample/tsconfig.spec.json"
+    }
+  ]
+}

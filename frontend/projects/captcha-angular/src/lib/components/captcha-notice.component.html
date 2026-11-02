@@ -1,0 +1,8 @@
+<p class="captcha-notice">
+  {{ texts.invisibleNotice }}
+  @if (privacyPolicyUrl) {
+    <a class="captcha-notice__link" [href]="privacyPolicyUrl" target="_blank" rel="noopener"
+      >{{ texts.privacyLink }} <span class="captcha-notice__hint">{{ texts.newWindow }}</span></a
+    >
+  }
+</p>

@@ -1,0 +1,23 @@
+<div class="captcha" [class]="'captcha captcha--' + state()">
+  <input
+    class="captcha__input"
+    type="checkbox"
+    [id]="inputId"
+    [checked]="state() === 'verified'"
+    [disabled]="isDisabled()"
+    [attr.aria-describedby]="statusId"
+    (change)="onToggle($event)"
+  />
+  <label class="captcha__label" [for]="inputId">{{ texts.checkboxLabel }}</label>
+  <span
+    class="captcha__status"
+    role="status"
+    aria-live="polite"
+    [id]="statusId"
+    [attr.aria-busy]="state() === 'verifying'"
+    >{{ statusText() }}</span
+  >
+  @if (state() === 'error') {
+    <button class="captcha__retry" type="button" (click)="retry()">{{ texts.retry }}</button>
+  }
+</div>

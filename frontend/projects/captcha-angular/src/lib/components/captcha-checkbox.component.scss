@@ -1,0 +1,81 @@
+/* Variables públicas; valores por defecto con contraste >= 4.5:1 sobre blanco. */
+:host {
+  --captcha-color-primary: #0b5cad;
+  --captcha-color-text: #1f2328;
+  --captcha-color-error: #b42318;
+  --captcha-color-background: #ffffff;
+  --captcha-color-border: #6e7781;
+  --captcha-radius: 6px;
+  --captcha-font-family: inherit;
+  --captcha-gap: 0.5rem;
+
+  display: block;
+  font-family: var(--captcha-font-family);
+  color: var(--captcha-color-text);
+}
+
+.captcha {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--captcha-gap);
+  padding: 0.75rem 1rem;
+  border: 1px solid var(--captcha-color-border);
+  border-radius: var(--captcha-radius);
+  background: var(--captcha-color-background);
+}
+
+.captcha__input {
+  width: 1.5rem;
+  height: 1.5rem;
+  margin: 0;
+  accent-color: var(--captcha-color-primary);
+  cursor: pointer;
+}
+
+.captcha__input:disabled {
+  cursor: progress;
+}
+
+.captcha__input:focus-visible,
+.captcha__retry:focus-visible {
+  outline: 3px solid var(--captcha-color-primary);
+  outline-offset: 2px;
+}
+
+.captcha__label {
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.captcha__status {
+  flex-basis: 100%;
+  min-height: 1.25em;
+  font-size: 0.875rem;
+}
+
+.captcha--error .captcha__status,
+.captcha--blocked .captcha__status,
+.captcha--expired .captcha__status {
+  color: var(--captcha-color-error);
+}
+
+.captcha--verified .captcha__status {
+  color: var(--captcha-color-primary);
+}
+
+.captcha__retry {
+  padding: 0.25rem 0.75rem;
+  border: 1px solid var(--captcha-color-primary);
+  border-radius: var(--captcha-radius);
+  background: transparent;
+  color: var(--captcha-color-primary);
+  font: inherit;
+  cursor: pointer;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .captcha--verifying .captcha__status {
+    transition: opacity 0.2s ease-in-out;
+  }
+}
