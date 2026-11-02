@@ -23,6 +23,8 @@ jobs:
 
   backend:
     runs-on: ubuntu-latest
+    env:
+      NVD_API_KEY: ${{ secrets.NVD_API_KEY }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-java@v4
@@ -32,10 +34,12 @@ jobs:
           cache: maven
       - name: Build, tests, cobertura, formato y checkstyle
         run: mvn -B -f backend/pom.xml verify
+      # OWASP Dependency-Check solo si el repositorio tiene el secret NVD_API_KEY; sin él, la SCA
+      # la cubre Trivy (job sca). SpotBugs/FindSecBugs se ejecuta siempre.
       - name: SpotBugs/FindSecBugs + OWASP Dependency-Check
-        run: mvn -B -f backend/pom.xml -Psecurity -DskipTests verify
-        env:
-          NVD_API_KEY: ${{ secrets.NVD_API_KEY }}
+        run: >-
+          mvn -B -f backend/pom.xml -Psecurity -DskipTests verify
+          -Ddependency-check.skip=${{ env.NVD_API_KEY == '' }}
 
   sca:
     # SCA independiente del NVD: Trivy sobre el JAR de la app de ejemplo,
@@ -49,7 +53,7 @@ jobs:
           java-version: "21"
           cache: maven
       - run: mvn -B -f backend/pom.xml -pl captcha-sample-app -am clean package -DskipTests -Djacoco.skip=true
-      - uses: aquasecurity/trivy-action@v0.30.0
+      - uses: aquasecurity/trivy-action@v0.36.0
         with:
           scan-type: rootfs
           scan-ref: backend/captcha-sample-app/target/captcha-sample-app-1.0.0-SNAPSHOT.jar
