@@ -49,7 +49,7 @@ jobs:
           java-version: "21"
           cache: maven
       - run: mvn -B -f backend/pom.xml -pl captcha-sample-app -am clean package -DskipTests -Djacoco.skip=true
-      - uses: aquasecurity/trivy-action@0.30.0
+      - uses: aquasecurity/trivy-action@v0.30.0
         with:
           scan-type: rootfs
           scan-ref: backend/captcha-sample-app/target/captcha-sample-app-1.0.0-SNAPSHOT.jar

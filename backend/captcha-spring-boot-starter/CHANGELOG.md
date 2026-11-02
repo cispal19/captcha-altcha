@@ -3,6 +3,13 @@
 Formato basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/) y en versionado
 semántico.
 
+## [Unreleased]
+
+### Fixed
+- Los scripts Lua de `RedisAttemptCounter` se leen al cargar la clase con el classloader de la
+  librería. Antes podían quedar ligados al classloader de una aplicación web ya detenida
+  (`Could not load [captcha/lua/rate.lua]`).
+
 ## [1.0.0] - 2026-10-21
 
 ### Added

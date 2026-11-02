@@ -3,6 +3,10 @@ package io.github.cispal19.captcha.infrastructure.redis;
 import io.github.cispal19.captcha.application.port.AttemptCounter;
 import io.github.cispal19.captcha.application.port.StoreUnavailableException;
 import io.github.cispal19.captcha.domain.AttemptKey;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.UncheckedIOException;
+import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.util.List;
 import java.util.Locale;
@@ -91,10 +95,21 @@ public class RedisAttemptCounter implements AttemptCounter {
     }
   }
 
+  /**
+   * Lee el script al cargar la clase y con el classloader de la librería. Una {@link
+   * ClassPathResource} sin classloader explícito captura el del hilo actual (en un servidor
+   * embebido, el de la aplicación web), que deja de ser válido si ese contexto se detiene.
+   */
   private static DefaultRedisScript<Long> script(String path) {
-    DefaultRedisScript<Long> script = new DefaultRedisScript<>();
-    script.setLocation(new ClassPathResource(path));
-    script.setResultType(Long.class);
-    return script;
+    ClassPathResource resource =
+        new ClassPathResource(path, RedisAttemptCounter.class.getClassLoader());
+    try (InputStream in = resource.getInputStream()) {
+      DefaultRedisScript<Long> script =
+          new DefaultRedisScript<>(new String(in.readAllBytes(), StandardCharsets.UTF_8));
+      script.setResultType(Long.class);
+      return script;
+    } catch (IOException e) {
+      throw new UncheckedIOException("No se pudo leer el script Lua " + path, e);
+    }
   }
 }
